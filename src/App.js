@@ -4,27 +4,28 @@ import './styles/global.css';
 
 function App() {
   const [bal, setBal] = useState(catalogoInicial);
-  const [f, setF] = useState("23 de enero de 2026");
+  const [f, setF] = useState("13 de marzo de 2026");
   const [input, setInput] = useState({ cuenta: 'bancos', monto: '', tipo: 'cargo' });
 
-  const ver = (dia) => {
+  // LÓGICA ACTUALIZADA CON FECHAS DE MARZO Y NUEVAS ACTIVIDADES
+  const ver = (actividad) => {
     let n = JSON.parse(JSON.stringify(catalogoInicial));
-    if (dia === '28') {
-      setF("28 de enero de 2026");
-      n.activo.bancos = 1520; n.activo.inventarios = 10000; n.activo.ivaAcred = 480;
-    } else if (dia === '30') {
-      setF("30 de enero de 2026");
-      n.activo.bancos = 1520; n.activo.inventarios = 10000; n.activo.ivaAcred = 480;
-      n.activo.ivaPorAcred = 2240; n.activo.mobiliario = 35000; n.activo.gtosInst = 14000;
-      n.activo.rentas = 5000; n.pasivo.acreedores = 16240;
-    } else if (dia === '04') {
-      setF("4 de febrero de 2026");
-      n.activo.bancos = 6160; n.activo.inventarios = 10000; n.activo.ivaAcred = 1440;
-      n.activo.ivaPorAcred = 2240; n.activo.mobiliario = 35000; n.activo.gtosInst = 18040;
-      n.activo.rentas = 5000; n.pasivo.acreedores = 23240;
-      n.pasivo.anticipoClientes = 4000; n.pasivo.ivaTrasladado = 640; n.capital = 1371000;
-    } else {
+    
+    if (actividad === 'apertura') {
       setF("23 de enero de 2026");
+      // Cuentas iniciales
+    } else if (actividad === 'ajustes_feb') {
+      setF("04 de febrero de 2026");
+      n.activo.bancos = 6160; n.pasivo.anticipoClientes = 4000;
+    } else if (actividad === 'marzo_inv') {
+      setF("10 de marzo de 2026");
+      // Ajuste de inventario de la subcompetencia anterior
+      n.activo.bancos = 15912; n.activo.inventarios = 4036; n.activo.ivaAcred = 14440;
+    } else if (actividad === 'cierre_marzo') {
+      setF("13 de marzo de 2026");
+      // Cierre con estados financieros finales
+      n.activo.bancos = 15912; n.activo.edificios = 796666.67; 
+      n.pasivo.acreedores = 16340; n.pasivo.ivaTrasladado = 2458.97;
     }
     setBal(n);
   };
@@ -44,85 +45,90 @@ function App() {
     setInput({ ...input, monto: '' });
   };
 
+  // DATOS PARA ESTADO DE RESULTADOS (Lo nuevo que pide la maestra)
+  const ingresos = 11300;
+  const costos = 5000;
+  const gastos = 2611.55; 
+  const utilidadNeta = ingresos - costos - gastos;
+
   const tA = Object.values(bal.activo).reduce((a, b) => a + (Number(b) || 0), 0);
-  const tPC = Object.values(bal.pasivo).reduce((a, b) => a + (Number(b) || 0), 0) + (Number(bal.capital) || 0);
+  const tPC = Object.values(bal.pasivo).reduce((a, b) => a + (Number(b) || 0), 0) + (Number(bal.capital) || 0) + utilidadNeta;
 
   return (
     <div className="app-layout">
       <aside className="sidebar no-print">
-        <h2 className="brand">SISTEMA CONTABLE</h2>
+        <h2 className="brand">SISTEMA MAYI 2026</h2>
         
         <div className="menu-group">
-          <button onClick={() => ver('23')}>23 Ene - Apertura</button>
-          <button onClick={() => ver('28')}>28 Ene - Compra</button>
-          <button onClick={() => ver('30')}>30 Ene - Ajustes</button>
-          <button onClick={() => ver('04')}>04 Feb - Anticipo</button>
+          <p className="entry-title">LÍNEA DE TIEMPO (ACTIVIDADES)</p>
+          <button onClick={() => ver('apertura')}>1. Apertura (Ene)</button>
+          <button onClick={() => ver('ajustes_feb')}>2. Ajustes (Feb)</button>
+          <button onClick={() => ver('marzo_inv')}>3. Ajuste Inv. (Mar)</button>
+          <button onClick={() => ver('cierre_marzo')}>4. Cierre Final (13 Mar)</button>
         </div>
 
         <form className="data-entry" onSubmit={procesarEntrada}>
-          <p className="entry-title">ENTRADA DE DATOS</p>
+          <p className="entry-title">NUEVO ASIENTO DE AJUSTE</p>
           <select value={input.cuenta} onChange={(e) => setInput({...input, cuenta: e.target.value})}>
             <option value="bancos">Bancos</option>
             <option value="inventarios">Inventarios</option>
-            <option value="caja">Caja</option>
-            <option value="mobiliario">Mobiliario</option>
             <option value="acreedores">Acreedores</option>
-            <option value="anticipoClientes">Anticipo Clientes</option>
           </select>
-          <input type="number" placeholder="Monto" value={input.monto} onChange={(e) => setInput({...input, monto: e.target.value})} />
+          <input type="number" placeholder="Monto $" value={input.monto} onChange={(e) => setInput({...input, monto: e.target.value})} />
           <div className="btn-group">
             <button type="button" onClick={() => setInput({...input, tipo: 'cargo'})} className={input.tipo === 'cargo' ? 'active' : ''}>Cargo</button>
             <button type="button" onClick={() => setInput({...input, tipo: 'abono'})} className={input.tipo === 'abono' ? 'active' : ''}>Abono</button>
           </div>
-          <button type="submit" className="btn-save">Registrar</button>
+          <button type="submit" className="btn-save">Registrar en Libros</button>
         </form>
 
-        <div className="status-badge">✨ BALANCE CUADRADO</div>
-        <button className="btn-pdf" onClick={() => window.print()}>GENERAR REPORTE PDF</button>
+        <button className="btn-pdf" onClick={() => window.print()}>GENERAR ESTADOS FINANCIEROS</button>
       </aside>
 
       <main className="main-content">
         <div className="paper">
           <header className="header-report">
             <h1>COCINA ECONÓMICA MAYI</h1>
-            <h3>Estado de Situación Financiera</h3>
-            <strong>Al {f}</strong>
+            <div className="badge-fintech">ESTADOS FINANCIEROS COMPLETO</div>
+            <p className="date-display">Corte al: {f}</p>
           </header>
 
-          <div className="grid-balance">
-            <div className="col">
-              <h4>ACTIVOS</h4>
-              <p className="cat-t">CIRCULANTE</p>
-              <div className="r"><span>Caja</span><span>${bal.activo.caja.toLocaleString()}</span></div>
-              <div className="r"><span>Bancos</span><span>${bal.activo.bancos.toLocaleString()}</span></div>
-              <div className="r"><span>Inventarios</span><span>${bal.activo.inventarios.toLocaleString()}</span></div>
-              <div className="r"><span>IVA Acreditable</span><span>${bal.activo.ivaAcred.toLocaleString()}</span></div>
-              <div className="r"><span>IVA por Acreditar</span><span>${bal.activo.ivaPorAcred.toLocaleString()}</span></div>
-              <p className="cat-t">NO CIRCULANTE</p>
-              <div className="r"><span>Terrenos</span><span>${bal.activo.terrenos.toLocaleString()}</span></div>
-              <div className="r"><span>Edificios</span><span>${bal.activo.edificios.toLocaleString()}</span></div>
-              <div className="r"><span>Mobiliario y Eq.</span><span>${bal.activo.mobiliario.toLocaleString()}</span></div>
-              <div className="r"><span>Eq. Cómputo</span><span>${bal.activo.computo.toLocaleString()}</span></div>
-              <p className="cat-t">DIFERIDO</p>
-              <div className="r"><span>Gtos. Constitución</span><span>${bal.activo.gtosConst.toLocaleString()}</span></div>
-              <div className="r"><span>Gtos. Instalación</span><span>${bal.activo.gtosInst.toLocaleString()}</span></div>
-              <div className="r"><span>Rentas Pag. Ant.</span><span>${bal.activo.rentas.toLocaleString()}</span></div>
-              <div className="r"><span>Papelería y Útiles</span><span>${bal.activo.papeleria.toLocaleString()}</span></div>
-              <div className="total-bar"><span>TOTAL ACTIVO</span><span>${tA.toLocaleString()}</span></div>
+          <section className="results-box">
+            <h4 className="section-h">1. ESTADO DE RESULTADOS (Subcompetencia Actual)</h4>
+            <div className="r"><span>Ventas de Mercancía</span><span>${ingresos.toLocaleString()}</span></div>
+            <div className="r"><span>(-) Costo de lo Vendido</span><span>(${costos.toLocaleString()})</span></div>
+            <div className="r highlight"><span>Utilidad Bruta</span><span>${(ingresos - costos).toLocaleString()}</span></div>
+            <div className="r"><span>(-) Gastos de Administración</span><span>(${gastos.toLocaleString()})</span></div>
+            <div className="total-bar" style={{borderColor: 'var(--success)'}}>
+              <span>UTILIDAD NETA</span>
+              <span>${utilidadNeta.toLocaleString()}</span>
             </div>
+          </section>
 
-            <div className="col">
-              <h4>PASIVO + CAPITAL</h4>
-              <p className="cat-t">PASIVO (CORTO PLAZO)</p>
-              <div className="r"><span>Acreedores Diversos</span><span>${bal.pasivo.acreedores.toLocaleString()}</span></div>
-              <div className="r"><span>Anticipo Clientes</span><span>${bal.pasivo.anticipoClientes.toLocaleString()}</span></div>
-              <div className="r"><span>IVA Trasladado</span><span>${bal.pasivo.ivaTrasladado.toLocaleString()}</span></div>
-              <p className="cat-t">CAPITAL CONTABLE</p>
-              <div className="r"><span>Capital Social</span><span>${bal.capital.toLocaleString()}</span></div>
-              <div className="r"><span>Utilidad / Pérdida</span><span>$0</span></div>
-              <div className="total-bar"><span>TOTAL P + C</span><span>${tPC.toLocaleString()}</span></div>
+          <div className="divider"></div>
+
+          <section className="balance-section">
+            <h4 className="section-h">2. BALANCE GENERAL (Ajustado)</h4>
+            <div className="grid-balance">
+              <div className="col">
+                <p className="cat-t">ACTIVO CIRCULANTE</p>
+                <div className="r"><span>Bancos</span><span>${bal.activo.bancos.toLocaleString()}</span></div>
+                <div className="r"><span>Inventarios</span><span>${bal.activo.inventarios.toLocaleString()}</span></div>
+                <p className="cat-t">ACTIVO NO CIRCULANTE</p>
+                <div className="r"><span>Edificios (Neto)</span><span>${bal.activo.edificios.toLocaleString()}</span></div>
+                <div className="total-bar"><span>TOTAL ACTIVO</span><span>${tA.toLocaleString()}</span></div>
+              </div>
+
+              <div className="col">
+                <p className="cat-t">PASIVO CORTO PLAZO</p>
+                <div className="r"><span>Acreedores Diversos</span><span>${bal.pasivo.acreedores.toLocaleString()}</span></div>
+                <p className="cat-t">CAPITAL CONTABLE</p>
+                <div className="r"><span>Capital Social</span><span>${bal.capital.toLocaleString()}</span></div>
+                <div className="r highlight"><span>Utilidad del Ejercicio</span><span>${utilidadNeta.toLocaleString()}</span></div>
+                <div className="total-bar"><span>TOTAL P + C</span><span>${tPC.toLocaleString()}</span></div>
+              </div>
             </div>
-          </div>
+          </section>
 
           <footer className="sigs">
              <div><div className="line"></div><strong>Mauricio Alexander G. D.</strong><br/>ELABORÓ</div>
@@ -133,4 +139,5 @@ function App() {
     </div>
   );
 }
+
 export default App;
